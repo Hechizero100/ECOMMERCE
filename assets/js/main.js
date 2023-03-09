@@ -39,15 +39,88 @@ function printProducts(db) {
 
 }
 
+function handleShowCart() {
+    const iconCarHTML =document.querySelector(".bx-cart");
+    const cartHTML = document.querySelector(".cart");
 
+    iconCarHTML.addEventListener("click", function(){
+        cartHTML.classList.toggle("cart_show");
+    });
+}
+
+function addToCartProducts(db) {
+    const productsHTML = document.querySelector(".products");
+
+    productsHTML.addEventListener("click",function (e) {
+
+        if (e.target.classList.contains("bx-plus")) {
+
+            const id = Number(e.target.id);
+            const productfind = db.products.find((product) => product.id === id
+            
+            );
+
+          if (db.cart[productfind.id]) {
+            if (productfind.quantity === db.cart[productfind.id].amount) 
+            return alert("no tenemos mas en bodega");
+            db.cart[productfind.id].amount++;
+            
+          } else {
+            db.cart[productfind.id]= {...productfind,amount:1};
+          }
+
+            // PERSISTENCIA DE DATOS
+            window.localStorage.setItem("cart",JSON.stringify(db.cart));
+
+          console.log(db.cart);
+        }
+        });
+
+}
 
 async function main() {
     const db = {
         products:
         JSON.parse( window.localStorage.getItem("products"))||
-        (await getProducts()),cart:{}
+        (await getProducts()),
+        cart:JSON.parse(window.localStorage.getItem("cart"))|| {}
     }; 
     
     printProducts(db);
+    handleShowCart();
+    addToCartProducts(db);
+
+    const cardProducts = document.querySelector(".card_products");
+
+    let html = "";
+    for(const product in db.cart){
+        const{quantity,price,name,image,id,amount}= db.cart[product];
+
+        console.log({quantity,price,name, image, id,amount});
+
+        html += `
+        <div  class="card_product"> 
+            <div class="card_product--img">
+                <img src="${image}"  alt="imagen"/>
+            </div>
+            <div class="card_product--body">
+                <h4>${name} | $ ${price}</h4>
+                <p>Stock:${quantity}</p>
+
+                <div class="card_product--body-op">
+                <i class='bx bx-minus'></i>
+                <span>${amount} unit</span>
+                <i class='bx bx-plus'></i>
+                <i class='bx bx-trash'></i>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    cardProducts.innerHTML = html;
+
 }
 main ();
+
+
